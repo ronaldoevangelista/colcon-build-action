@@ -62,9 +62,8 @@ runs:
       shell: bash
       run: |
         COLCON=$(whereis colcon | grep ":" | awk '{ split($13,a,"/"); print $2 }')
-        echo "${COLCON}"
         . /opt/ros/${{ inputs.rosdistro }}/setup.bash
-        echo "$(ls -laF )"
         echo "$(pwd)"
         $COLCON build \
-          --packages-select ${{ inputs.target-packages }} --event-handlers console_direct+
+         --packages-select ${{ inputs.target-packages }} \
+         --event-handlers console_direct+ --executor sequential
