@@ -64,10 +64,9 @@ runs:
         COLCON=$(whereis colcon | grep ":" | awk '{ split($13,a,"/"); print $2 }')
         echo "${COLCON}"
         . /opt/ros/${{ inputs.rosdistro }}/setup.bash
-        echo "$(ls -laF )"
-        echo "$(pwd)"
         . ./install/setup.bash
         $COLCON test \
-          --packages-select ${{ inputs.target-packages }} --return-code-on-test-failure --event-handlers console_direct+
+          --packages-select ${{ inputs.target-packages }} \
+          --return-code-on-test-failure \
+          --event-handlers console_direct+
         $COLCON test-result --verbose --all
-
