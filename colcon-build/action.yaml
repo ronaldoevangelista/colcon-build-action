@@ -67,5 +67,4 @@ runs:
         echo "$(ls -laF )"
         echo "$(pwd)"
         $COLCON build \
-          --packages-select ${{ inputs.target-packages }} \
-          --event-handlers console_direct+
+          --packages-select ${{ inputs.target-packages }} --event-handlers console_direct+
