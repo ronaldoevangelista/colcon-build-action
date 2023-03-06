@@ -43,10 +43,9 @@ runs:
 
     - name: Runnning Coverage
       working-directory: ${{ inputs.working_dir }}
-    env:
-      PACKAGE_NAME: ${{ inputs.target-packages }}"
-      CMAKE_ARGS: -DCMAKE_CXX_FLAGS="-fprofile-arcs -ftest-coverage --coverage"
-
+      env:
+        PACKAGE_NAME: ${{ inputs.target-packages }}
+        CMAKE_ARGS: -DCMAKE_CXX_FLAGS="-fprofile-arcs -ftest-coverage --coverage"
       shell: bash
       run: |
         echo "Runnning Coverage"
