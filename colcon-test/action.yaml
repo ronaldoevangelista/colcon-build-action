@@ -68,7 +68,6 @@ runs:
         echo "$(pwd)"
         . ./install/setup.bash
         $COLCON test \
-          --packages-select ${{ inputs.target-packages }} \
-          --return-code-on-test-failure \
-          --event-handlers console_direct+
+          --packages-select ${{ inputs.target-packages }} --return-code-on-test-failure --event-handlers console_direct+
         $COLCON test-result --verbose --all
+
