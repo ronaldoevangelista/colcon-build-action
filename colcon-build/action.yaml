@@ -65,5 +65,6 @@ runs:
         . /opt/ros/${{ inputs.rosdistro }}/setup.bash
         echo "$(pwd)"
         $COLCON build \
-         --packages-select ${{ inputs.target-packages }} \
-         --event-handlers console_direct+ --executor sequential
+          --packages-select ${{ inputs.target-packages }} \
+          --event-handlers console_direct+ \
+          --executor sequential
