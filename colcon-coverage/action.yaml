@@ -1,0 +1,70 @@
+name: "Colcon Build Action"
+description: "Run  build package CI using colcon in Github Actions."
+author: "Ronaldo Evangelista"
+branding:
+  icon: "activity"
+  color: "gray-dark"
+
+inputs:
+  token:
+    description: "**Required.** The GITHUB_TOKEN secret."
+    required: false
+    default: ${{ github.token }}
+  rosdistro:
+    description: |
+      ROS 2 distribution to target for the build.  Will be used both for
+      `rosdep install` and `source setup.bash`. Either or both of
+      `target-ros1-distro` and `target-ros2-distro`, but at least one must
+      be specified. Typically, both are specified when building packages
+      that rely on both ROS versions, such as the ros1_bridge.
+    default: "humble"
+    required: true
+  target-packages:
+    description: |
+      Limit the package(s) to be built and tested.
+      If left empty this will build and test everything in the workspace - including packages from vcs-repo-file-url imports.
+      Passing multiple package names is allowed.
+      Package names can be separated by any whitespace character.
+    required: true
+    default: ""
+  working_dir:
+    description: "The working directory of the action. Defaults to workflow workspace."
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Show target packages
+      run: |
+        echo "rosdistro: ${{ inputs.rosdistro }}"
+        echo "target packages: ${{ inputs.target-packages }}"
+        echo "working_dir: ${{ inputs.working_dir }}"
+      shell: bash
+
+    - name: Runnning Coverage
+      working-directory: ${{ inputs.working_dir }}
+    env:
+      PACKAGE_NAME: ${{ inputs.target-packages }}"
+      CMAKE_ARGS: -DCMAKE_CXX_FLAGS="-fprofile-arcs -ftest-coverage --coverage"
+
+      shell: bash
+      run: |
+        echo "Runnning Coverage"
+        . /opt/ros/${{ inputs.rosdistro }}/setup.bash
+        . ./install/setup.bash
+        colcon build --packages-select ${{ env.PACKAGE_NAME }} \
+            --cmake-args ${{ env.CMAKE_ARGS }} -DCMAKE_BUILD_TYPE="Debug"
+        lcov --no-external --capture --initial --directory . \
+            --output-file ./build/${{ env.PACKAGE_NAME }}/initial_coverage.info
+        colcon test --packages-select ${{ env.PACKAGE_NAME }}
+        lcov --no-external --capture --directory . \
+            --output-file ./build/${{ env.PACKAGE_NAME }}/test_coverage.info
+        lcov --add-tracefile ./build/${{ env.PACKAGE_NAME }}/initial_coverage.info \
+            --add-tracefile ./build/${{ env.PACKAGE_NAME }}/test_coverage.info \
+            --output-file   ./build/${{ env.PACKAGE_NAME }}/merge_coverage.info
+        lcov --remove  ./build/${{ env.PACKAGE_NAME }}/merge_coverage.info \
+            "*/CMakeCCompilerId.c" "*/CMakeCXXCompilerId.cpp" \
+            --output-file ./build/${{ env.PACKAGE_NAME }}/report_coverage.info
+        echo "Runnning Coverage Summary"
+        mkdir -p ./build/${{ env.PACKAGE_NAME }}/coverage
+        lcov --summary ./build/${{ env.PACKAGE_NAME }}/report_coverage.info

@@ -1,0 +1,74 @@
+name: "Colcon Build Action"
+description: "Run  build package CI using colcon in Github Actions."
+author: "Ronaldo Evangelista"
+branding:
+  icon: "activity"
+  color: "gray-dark"
+
+inputs:
+  token:
+    description: "**Required.** The GITHUB_TOKEN secret."
+    required: false
+    default: ${{ github.token }}
+  rosdistro:
+    description: |
+      ROS 2 distribution to target for the build.  Will be used both for
+      `rosdep install` and `source setup.bash`. Either or both of
+      `target-ros1-distro` and `target-ros2-distro`, but at least one must
+      be specified. Typically, both are specified when building packages
+      that rely on both ROS versions, such as the ros1_bridge.
+    default: "humble"
+    required: true
+  target-packages:
+    description: |
+      Limit the package(s) to be built and tested.
+      If left empty this will build and test everything in the workspace - including packages from vcs-repo-file-url imports.
+      Passing multiple package names is allowed.
+      Package names can be separated by any whitespace character.
+    required: true
+    default: ""
+  extra-cmake-args:
+    default: ""
+    description: |
+      Additional flags passed to CMake (using colcon build --cmake-args)
+    required: false
+  build-depends-repos:
+    description: ""
+    required: false
+    default: ""
+  cmake-build-type:
+    description: ""
+    required: false
+    default: Release
+  working_dir:
+    description: "The working directory of the action. Defaults to workflow workspace."
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Show target packages
+      run: |
+        echo "rosdistro: ${{ inputs.rosdistro }}"
+        echo "target packages: ${{ inputs.target-packages }}"
+        echo "extra-cmake-args: ${{ inputs.extra-cmake-args }}"
+        echo "build-depends-repos: ${{ inputs.build-depends-repos }}"
+        echo "extra-cmake-args: ${{ inputs.cmake-build-type }}"
+        echo "working_dir: ${{ inputs.working_dir }}"
+      shell: bash
+
+    - name: Running Tests
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+      run: |
+        COLCON=$(whereis colcon | grep ":" | awk '{ split($13,a,"/"); print $2 }')
+        echo "${COLCON}"
+        . /opt/ros/${{ inputs.rosdistro }}/setup.bash
+        echo "$(ls -laF )"
+        echo "$(pwd)"
+        . /install/setup.bash
+        $COLCON test \
+          --packages-select ${{ inputs.target-packages }} \
+          --return-code-on-test-failure \
+          --event-handlers console_direct+
+        $COLCON test-result --verbose --all
