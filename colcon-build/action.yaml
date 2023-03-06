@@ -57,7 +57,7 @@ runs:
         echo "working_dir: ${{ inputs.working_dir }}"
       shell: bash
 
-    - name: Running Tests
+    - name: Running Build
       working-directory: ${{ inputs.working_dir }}
       shell: bash
       run: |
@@ -66,9 +66,6 @@ runs:
         . /opt/ros/${{ inputs.rosdistro }}/setup.bash
         echo "$(ls -laF )"
         echo "$(pwd)"
-        . /install/setup.bash
-        $COLCON test \
+        $COLCON build \
           --packages-select ${{ inputs.target-packages }} \
-          --return-code-on-test-failure \
           --event-handlers console_direct+
-        $COLCON test-result --verbose --all
